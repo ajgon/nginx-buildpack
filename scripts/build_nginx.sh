@@ -12,10 +12,16 @@
 NGINX_VERSION=${NGINX_VERSION-1.13.11}
 PCRE_VERSION=${PCRE_VERSION-8.42}
 ZLIB_VERSION=${ZLIB_VERSION-1.2.11}
+NGX_DEVEL_KIT_VERSION=${NGX_DEVEL_KIT_VERSION-0.3.0}
+SET_MISC_MODULE_VERSION=${SET_MISC_MODULE_VERSION-0.32}
+HEADERS_MORE_MODULE_VERSION=${HEADERS_MORE_MODULE_VERSION-0.33}
 
 nginx_tarball_url=http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
 pcre_tarball_url=ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${PCRE_VERSION}.tar.gz
 zlib_url=http://zlib.net/zlib-${ZLIB_VERSION}.tar.gz
+ngx_devel_kit_url=https://github.com/simplresty/ngx_devel_kit/archive/v${NGX_DEVEL_KIT_VERSION}.tar.gz
+set_misc_module_url=https://github.com/openresty/set-misc-nginx-module/archive/v${SET_MISC_MODULE_VERSION}.tar.gz
+headers_more_module_url=https://github.com/openresty/headers-more-nginx-module/archive/v${HEADERS_MORE_MODULE_VERSION}.tar.gz
 
 temp_dir=$(mktemp -d /tmp/nginx.XXXXXXXXXX)
 
@@ -33,6 +39,15 @@ echo "Downloading $pcre_tarball_url"
 echo "Downloading $zlib_url"
 (cd nginx-${NGINX_VERSION} && curl -L $zlib_url | tar xvz )
 
+echo "Downloading $ngx_devel_kit_url"
+(cd nginx-${NGINX_VERSION} && curl -L $ngx_devel_kit_url | tar xvz )
+
+echo "Downloading $set_misc_module_url"
+(cd nginx-${NGINX_VERSION} && curl -L $set_misc_module_url | tar xvz )
+
+echo "Downloading $headers_more_module_url"
+(cd nginx-${NGINX_VERSION} && curl -L $headers_more_module_url | tar xvz )
+
 (
   cd nginx-${NGINX_VERSION}
   ./configure \
@@ -45,6 +60,10 @@ echo "Downloading $zlib_url"
     --with-http_v2_module \
     --with-file-aio \
     --with-http_realip_module \
+    --with-http_sub_module \
+    --add-module=./ngx_devel_kit-${NGX_DEVEL_KIT_VERSION} \
+    --add-module=./set-misc-nginx-module-${SET_MISC_MODULE_VERSION} \
+    --add-module=./headers-more-nginx-module-${HEADERS_MORE_MODULE_VERSION} \
     --with-cc-opt='-g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2' \
     --with-ld-opt='-Wl,-Bsymbolic-functions -Wl,-z,relro -Wl,--as-needed'
   make install
